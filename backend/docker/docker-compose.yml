@@ -1,0 +1,61 @@
+services:
+
+  # ---------------------------------------------------------------
+  # Django 主服务（asr + chat + tts 三个模块）
+  # ---------------------------------------------------------------
+  django:
+    build:
+      context: ..
+      dockerfile: docker/dev.Dockerfile
+    container_name: nezha-django
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ..:/app                                    # 挂载项目根目录
+      - ../resource:/app/resource:ro               # 资源文件只读
+      - ../generated_audio:/app/generated_audio    # TTS 音频输出
+      - ../logs:/app/logs                          # 日志持久化
+    environment:
+      - DJANGO_SETTINGS_MODULE=server.settings
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    depends_on:
+      - ollama
+    networks:
+      - nezha-net
+
+  # ---------------------------------------------------------------
+  # Ollama 服务（chat 模块依赖）
+  # 模型文件挂载到宿主机目录，避免容器重建后重新下载
+  # ---------------------------------------------------------------
+  ollama:
+    image: ollama/ollama:latest
+    container_name: nezha-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama                # 模型持久化
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - nezha-net
+
+volumes:
+  ollama-models:
+
+networks:
+  nezha-net:
+    driver: bridge
