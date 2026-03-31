@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 开始构建Docker镜像..."
+echo "🚀 开始测试Docker构建..."
 
 # 检查Docker是否安装
 if ! command -v docker &> /dev/null; then

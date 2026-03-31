@@ -5,12 +5,12 @@ services:
   # ---------------------------------------------------------------
   django:
     build:
-      context: ..
-      dockerfile: docker/dev.Dockerfile
+      context: .
+      dockerfile: dev.Dockerfile
     container_name: nezha-django
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "8001:8001"
     volumes:
       - ..:/app                                    # 挂载项目根目录
       - ../resource:/app/resource:ro               # 资源文件只读
@@ -19,13 +19,14 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=server.settings
       - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+      - HOME=/app
+    # deploy:
+#       resources:
+#         reservations:
+#           devices:
+#             - driver: nvidia
+#               count: 1
+#               capabilities: [gpu]
     depends_on:
       - ollama
     networks:
